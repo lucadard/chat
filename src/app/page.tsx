@@ -30,12 +30,12 @@ const SignOut = ({ auth }: { auth: Auth }) => {
 const Messages = () => {
   const db = getDb()
   const messagesRef = collection(db, 'messages')
-  const q = query(messagesRef, orderBy('createdAt'), limit(25))
+  const q = query(messagesRef, orderBy('createdAt'))
   const [messages] = useCollectionData(q)
   return (
-    <ul className='ml-5 flex flex-col-reverse overflow-y-scroll pb-4'>
+    <ul className='flex flex-col-reverse pb-4'>
       {messages?.reverse().map((message, i) =>
-        <li key={i} className='flex gap-4 py-2'>
+        <li key={i} className='mx-5 flex gap-4 py-2'>
           <div className='h-10 w-10 rounded-full bg-white' />
           <div>
             <p className='font-medium'>Nombre <span className='text-sm font-thin'>fecha y hora</span></p>
@@ -73,11 +73,11 @@ const Input = ({ userId }: { userId: string }) => {
   }
   return (
     <form
-      className='mx-5 flex rounded-xl bg-gray-600'
+      className='text-border-secondary z-10 mx-5 flex rounded-xl border border-secondary-border bg-secondary'
       onSubmit={handleSubmit(handleFormSubmit)}
     >
-      <button className='flex items-center justify-center p-3 px-5 text-black'>
-        <span className='grid aspect-square h-6 w-6 place-content-center rounded-full bg-white text-sm'>
+      <button className='flex items-center justify-center p-3 px-5'>
+        <span className='bg-border-secondary grid aspect-square h-6 w-6 place-content-center rounded-full bg-secondary-text text-sm text-secondary'>
           ➤
         </span>
       </button>
@@ -91,11 +91,39 @@ const Input = ({ userId }: { userId: string }) => {
   )
 }
 
+const Upper = () => {
+  return (
+    <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>
+      <div className='flex items-center gap-1 pb-3 text-xl text-links'>
+        <a href='/'>chats</a>
+        <span className='text-gray-400'>/</span>
+        <a href='/' className='font-semibold'>general</a>
+      </div>
+      <div className='flex gap-2'>
+        <div className='flex items-center gap-2 border-b border-orange-600 p-2 pb-3'>
+          <span>{'<>'}</span>
+          <p>Code</p>
+        </div>
+        <div className='flex items-center gap-2 border-b border-orange-600 p-2 pb-3'>
+          <span>◴</span>
+          <p>Issues</p>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 export default function Home () {
   return (
-    <main className='flex h-full flex-col'>
-      <section className='flex h-[90%] flex-col justify-end border pb-5'>
-        <Messages />
+    <main className='flex h-screen flex-col'>
+      <Upper />
+      <section className='flex basis-full flex-col justify-end pb-5'>
+        <div className='relative -mb-3 basis-full'>
+          <div className='absolute inset-0 overflow-y-scroll'>
+            <Messages />
+          </div>
+        </div>
         <Input userId='xDD' />
       </section>
     </main>
