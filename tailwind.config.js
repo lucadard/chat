@@ -10,7 +10,7 @@ module.exports = {
       colors: {
         primary: '#010409',
         nav: '#161B22',
-        aside: '#0D1117',
+        sidebar: '#0D1117',
         links: '#2f81f7',
         secondary: '#21262D',
         'secondary-border': '#363B42',
