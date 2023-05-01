@@ -15,8 +15,9 @@ type Message = {
 }
 const Messages = ({ chatId }: { chatId: string }) => {
   const db = getDb()
-  const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('createdAt', 'desc'))
+  const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'desc'))
   const messages = useCollectionData(q)[0] as unknown as Message[]
+
   return (
     <ul className='flex flex-col-reverse pb-4'>
       {messages?.map((message, i) => {
