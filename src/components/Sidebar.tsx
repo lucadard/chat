@@ -3,6 +3,7 @@ import { collection, doc, orderBy, query, where } from '@firebase/firestore'
 import Link from 'next/link'
 import React from 'react'
 import { useDocumentData } from 'react-firebase-hooks/firestore'
+import Header from './Header'
 
 type Props = {}
 
@@ -42,9 +43,10 @@ const Sidebar = (props: Props) => {
   return (
     <div className='flex w-[240px] flex-col gap-5 border-r border-secondary-border bg-sidebar px-3 pt-5'>
       <div className='flex items-center gap-2'>
-        <img src={`https://github.com/${'lucadard'}.png?size=20`} alt='' className='h-5 w-5 rounded-full' />
+        <Header />
+        {/* <img src={`https://github.com/${'lucadard'}.png?size=20`} alt='' className='h-5 w-5 rounded-full' />
         <span>{'>'}</span>
-        <p className='text-xl'>lucadard</p>
+        <p className='text-xl'>lucadard</p> */}
       </div>
       <input type='text' className='w-full rounded-md border border-secondary-border bg-primary px-2 py-1 text-sm' placeholder='Search user' />
       <ChatList />
