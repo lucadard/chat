@@ -38,7 +38,20 @@ const ChatCard = ({ id }: { id: string }) => {
   if (!chat) return null
 
   const otherUser = (chat.users?.filter((user: User) => user.username !== 'lucadard'))[0] as User
-  console.log(otherUser)
+
+  if (id === 'general') {
+    return (
+      <Link href='/chats/general' className='flex items-center gap-3 p-2 hover:bg-white/20'>
+        <Image
+          src='' alt=''
+          height={20} width={20}
+          className='h-10 w-10 rounded-full bg-white'
+        />
+        <span>General</span>
+      </Link>
+    )
+  }
+
   return (
     <Link href={`/chats/${id}`} className='flex items-center gap-3 p-2 hover:bg-white/20'>
       <Image
