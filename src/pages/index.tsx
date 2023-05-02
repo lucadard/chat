@@ -1,31 +1,35 @@
-'use client'
-import { Auth, GithubAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
-import PageLayout from './PageLayout'
+import { getSession, signOut, useSession } from 'next-auth/react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Header from '@/components/Header'
+import Link from 'next/link'
 
-// const inter = Inter({ subsets: ['latin'] })
+export default function Home () {
+  const { data: session, status } = useSession()
+  const { replace } = useRouter()
+  const loading = status === 'loading'
+  if (loading) return <div className='grid h-screen place-content-center'>loading...</div>
 
-const SignInWithGithub = ({ auth }: { auth: Auth }) => {
-  const provider = new GithubAuthProvider().addScope('user')
-
-  async function handleSignIn () {
-    const result = await signInWithPopup(auth, provider)
-    console.log(result)
-  }
   return (
-    <button onClick={handleSignIn}>Sign in with Github</button>
-  )
-}
-
-const SignOut = ({ auth }: { auth: Auth }) => {
-  return (
-    <button onClick={async () => await signOut(auth)}>Sign out</button>
-  )
-}
-
-export default function Home ({ children }: { children: React.ReactNode }) {
-  return (
-    <div>
-      <p>/</p>
+    <div className='grid h-screen place-content-center'>
+      Home
+      {session?.user
+        ? <>
+          <Link href='/chats/general'>
+            Ir
+          </Link>
+          <Link
+            href='/api/auth/signout'
+            onClick={(e) => {
+              e.preventDefault()
+              void signOut({ callbackUrl: '/' })
+            }}
+          >Sign out
+          </Link>
+        </>
+        : <Link href='/signin'>
+          Login
+          </Link>}
     </div>
   )
 }
