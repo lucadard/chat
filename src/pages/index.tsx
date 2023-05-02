@@ -1,12 +1,9 @@
-import { getSession, signOut, useSession } from 'next-auth/react'
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import Header from '@/components/Header'
+/* eslint-disable react/jsx-closing-tag-location */
+import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function Home () {
   const { data: session, status } = useSession()
-  const { replace } = useRouter()
   const loading = status === 'loading'
   if (loading) return <div className='grid h-screen place-content-center'>loading...</div>
 
@@ -29,7 +26,7 @@ export default function Home () {
         </>
         : <Link href='/signin'>
           Login
-          </Link>}
+        </Link>}
     </div>
   )
 }
