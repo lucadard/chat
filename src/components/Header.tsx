@@ -1,12 +1,9 @@
 import Link from 'next/link'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
 import OutsideAlerter from '@/hooks/useClickOutside'
 import Image from 'next/image'
 
-// The approach used in this component shows how to built a sign in and sign out
-// component that works on pages which support both client and server side
-// rendering, and avoids any flash incorrect content on initial page load.
 export default function Header () {
   const { data: session } = useSession()
   const [open, setOpen] = useState(false)
