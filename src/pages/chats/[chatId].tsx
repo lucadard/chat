@@ -9,6 +9,7 @@ import { useRouter } from 'next/router'
 import PageLayout from '../PageLayout'
 import { getSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
+import Image from 'next/image'
 
 type Message = {
   createdAt: Timestamp
@@ -26,7 +27,11 @@ const Messages = ({ chatId }: { chatId: string }) => {
         const date = message.createdAt ? message.createdAt.toDate().toLocaleString() : ''
         return (
           <li key={i} className='mx-5 flex gap-4 py-2'>
-            <img src={getAvatarById('84546615')} alt='' className='h-10 w-10 rounded-full' />
+            <Image
+              src={getAvatarById('84546615')} alt=''
+              height={20} width={20}
+              className='h-10 w-10 rounded-full'
+            />
             <div className='w-full'>
               <p className='whitespace-nowrap font-medium'>{message.username} <span className='text-sm font-thin'>{date}</span></p>
               <p className='break-all text-base'>

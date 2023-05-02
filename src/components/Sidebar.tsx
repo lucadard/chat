@@ -5,6 +5,7 @@ import React from 'react'
 import { useDocumentData } from 'react-firebase-hooks/firestore'
 import Header from './Header'
 import { getAvatarById } from '@/lib'
+import Image from 'next/image'
 
 type Props = {}
 
@@ -40,7 +41,11 @@ const ChatCard = ({ id }: { id: string }) => {
   console.log(otherUser)
   return (
     <Link href={`/chats/${id}`} className='flex items-center gap-3 p-2 hover:bg-white/20'>
-      <img src={getAvatarById(otherUser?.id)} alt='' className='h-10 w-10 rounded-full' />
+      <Image
+        src={getAvatarById(otherUser?.id)} alt=''
+        height={20} width={20}
+        className='h-10 w-10 rounded-full'
+      />
       <span>{otherUser?.username}</span>
     </Link>
   )
@@ -51,9 +56,6 @@ const Sidebar = (props: Props) => {
     <div className='flex w-[240px] flex-col gap-5 border-r border-secondary-border bg-sidebar px-3 pt-5'>
       <div className='flex items-center gap-2'>
         <Header />
-        {/* <img src={`https://github.com/${'lucadard'}.png?size=20`} alt='' className='h-5 w-5 rounded-full' />
-        <span>{'>'}</span>
-        <p className='text-xl'>lucadard</p> */}
       </div>
       <input type='text' className='w-full rounded-md border border-secondary-border bg-primary px-2 py-1 text-sm' placeholder='Search user' />
       <ChatList />

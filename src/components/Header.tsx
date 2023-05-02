@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
 import OutsideAlerter from '@/hooks/useClickOutside'
+import Image from 'next/image'
 
 // The approach used in this component shows how to built a sign in and sign out
 // component that works on pages which support both client and server side
@@ -14,12 +15,16 @@ export default function Header () {
 
   return (
     <OutsideAlerter active={open} callback={() => setOpen(false)}>
-      <header className='relative flex w-full items-center justify-between'>
+      <header className='relative flex w-full select-none items-center justify-between'>
         <div
           onClick={() => setOpen(prev => !prev)}
           className='group flex cursor-pointer items-center'
         >
-          <img src={session.user.image ?? ''} alt='' className='h-5 w-5 rounded-full border border-transparent outline outline-[1px] outline-secondary-border' />
+          <Image
+            src={session.user.image ?? ''} alt=''
+            height={20} width={20}
+            className='h-5 w-5 rounded-full border border-transparent outline outline-[1px] outline-secondary-border'
+          />
           <span className='-mt-1 block -rotate-45 scale-[.3] group-hover:text-white/80'>◣</span>
           {/* <span>{session.user.name}</span> */}
         </div>
