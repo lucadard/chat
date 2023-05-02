@@ -40,9 +40,9 @@ const ChatCard = ({ id }: { id: string }) => {
     return (
       <Link href='/chats/general' className='flex items-center gap-3 p-2 hover:bg-white/20'>
         <Image
-          src='/' alt=''
+          src='/group_icon.svg' alt=''
           height={20} width={20}
-          className='h-10 w-10 rounded-full bg-white'
+          className='h-10 w-10 rounded-full'
         />
         <span>General</span>
       </Link>
