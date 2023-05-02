@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useRouter } from 'next/router'
 import PageLayout from '../PageLayout'
-import Protected from '@/components/Protected'
 import { getSession } from 'next-auth/react'
 
 const getAvatarById = (id: string, px = '40') => `https://avatars.githubusercontent.com/u/${id}?s=${px}&v=4`
