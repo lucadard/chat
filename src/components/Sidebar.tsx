@@ -4,6 +4,7 @@ import Link from 'next/link'
 import React from 'react'
 import { useDocumentData } from 'react-firebase-hooks/firestore'
 import Header from './Header'
+import { getAvatarById } from '@/lib'
 
 type Props = {}
 
@@ -24,17 +25,23 @@ const ChatList = () => {
   )
 }
 
+type User = {
+  username: string
+  id: string
+}
 const ChatCard = ({ id }: { id: string }) => {
   const db = getDb()
   const docRef = doc(db, 'chats', id)
   const [chat] = useDocumentData(docRef)
 
   if (!chat) return null
-  const otherUser = (chat.users?.filter((user: string) => user !== 'lucadard'))[0] as string
+
+  const otherUser = (chat.users?.filter((user: User) => user.username !== 'lucadard'))[0] as User
+  console.log(otherUser)
   return (
     <Link href={`/chats/${id}`} className='flex items-center gap-3 p-2 hover:bg-white/20'>
-      <img src={`https://github.com/${otherUser}.png?size=40`} alt='' className='h-10 w-10 rounded-full' />
-      <span>{otherUser}</span>
+      <img src={getAvatarById(otherUser?.id)} alt='' className='h-10 w-10 rounded-full' />
+      <span>{otherUser?.username}</span>
     </Link>
   )
 }
