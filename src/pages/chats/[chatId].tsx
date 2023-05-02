@@ -8,16 +8,19 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useRouter } from 'next/router'
 import ChatPageLayout from '../ChatPageLayout'
-import { getSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
+import { GetServerSideProps, GetStaticPaths } from 'next'
+import { useChat } from '@/context/ChatContext'
 
 type Message = {
   createdAt: Timestamp
   text: string
   username: string
 }
-const Messages = ({ chatId }: { chatId: string }) => {
+const Messages = () => {
+  const { id: chatId } = useChat()
   const db = getDb()
   const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'desc'))
   const messages = useCollectionData(q)[0] as unknown as Message[]
@@ -49,7 +52,9 @@ const Messages = ({ chatId }: { chatId: string }) => {
 type FormData = {
   message: string
 }
-const Input = ({ userId, chatId }: { userId: string, chatId: string }) => {
+const Input = () => {
+  const { id: chatId } = useChat()
+  const { data: session } = useSession()
   const db = getDb()
   const { register, reset, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(z.object({ message: z.string().trim().min(1).max(300) })),
@@ -63,7 +68,7 @@ const Input = ({ userId, chatId }: { userId: string, chatId: string }) => {
       await addDoc(collection(chatsRef, chatId, 'messages'), {
         createdAt: serverTimestamp(),
         text: data.message,
-        username: userId
+        username: session?.user?.name
       })
     } catch (err) {
       console.error('error writting document', err)
@@ -89,26 +94,7 @@ const Input = ({ userId, chatId }: { userId: string, chatId: string }) => {
   )
 }
 
-const Chat = () => {
-  const router = useRouter()
-  const chatId = router.query.chatId as string
-  if (router.isFallback) return null
-
-  return (
-    <ChatPageLayout>
-      <div className='relative -mb-3 basis-full'>
-        <div className='absolute inset-0 overflow-y-scroll'>
-          <Messages chatId={chatId} />
-        </div>
-      </div>
-      <Input userId='lucadard' chatId={chatId} />
-    </ChatPageLayout>
-  )
-}
-
-export default Chat
-
-export const getServerSideProps: any = async (ctx: any) => {
+export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
   const { req } = ctx
   const session = await getSession({ req })
   if (!session) {
@@ -117,6 +103,23 @@ export const getServerSideProps: any = async (ctx: any) => {
     }
   }
   return {
-    props: {}
+    props: {
+      session
+    }
   }
 }
+
+const Chat = () => {
+  return (
+    <ChatPageLayout>
+      <div className='relative -mb-3 basis-full'>
+        <div className='absolute inset-0 overflow-y-scroll'>
+          <Messages />
+        </div>
+      </div>
+      <Input />
+    </ChatPageLayout>
+  )
+}
+
+export default Chat
