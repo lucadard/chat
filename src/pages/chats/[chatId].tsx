@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-closing-tag-location */
 import { getDb } from '@/firebase'
 import { Timestamp, addDoc, collection, orderBy, query, serverTimestamp } from '@firebase/firestore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,7 +7,7 @@ import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useRouter } from 'next/router'
-import PageLayout from '../PageLayout'
+import ChatPageLayout from '../ChatPageLayout'
 import { getSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
@@ -65,7 +66,7 @@ const Input = ({ userId, chatId }: { userId: string, chatId: string }) => {
         username: userId
       })
     } catch (err) {
-      console.log('error writting document', err)
+      console.error('error writting document', err)
     }
   }
   return (
@@ -94,14 +95,14 @@ const Chat = () => {
   if (router.isFallback) return null
 
   return (
-    <PageLayout>
+    <ChatPageLayout>
       <div className='relative -mb-3 basis-full'>
         <div className='absolute inset-0 overflow-y-scroll'>
           <Messages chatId={chatId} />
         </div>
       </div>
       <Input userId='lucadard' chatId={chatId} />
-    </PageLayout>
+    </ChatPageLayout>
   )
 }
 
