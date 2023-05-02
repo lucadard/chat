@@ -1,9 +1,8 @@
 import { getDb } from '@/firebase'
-import { doc } from '@firebase/firestore'
+import { doc, getDoc } from '@firebase/firestore'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { createContext, useContext, ReactNode } from 'react'
-import { useDocumentData } from 'react-firebase-hooks/firestore'
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 
 export type User = {
   id: string
@@ -17,19 +16,24 @@ const ChatStateContext = createContext<State | undefined>(undefined)
 
 function ChatProvider ({ children }: ChatProviderProps) {
   const { query } = useRouter()
+  const { data: session } = useSession()
+  const [users, setUsers] = useState<User[]>([])
   const chatId = query.chatId as string
   const db = getDb()
-  const docRef = doc(db, 'chats', chatId)
-  const [chat] = useDocumentData(docRef)
-  const { data: session } = useSession()
 
-  const users: User[] = chat?.users
-    ?.filter((user: User) => user.username !== session?.user?.name) ?? []
+  useEffect(() => {
+    if (!chatId) return
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const docSnap = getDoc(doc(db, 'chats', chatId)).then(
+      docSnap => docSnap.exists() && setUsers(docSnap.data().users as User[]))
+  }, [chatId])
+
+  const userData = users?.filter((user: User) => user.username !== session?.user?.name)[0] ?? undefined
 
   const value = {
     id: chatId,
-    name: chatId === 'general' || !users ? 'general' : users[0]?.username,
-    userData: users[0]
+    name: chatId === 'general' || !userData ? 'general' : userData.username,
+    userData
   }
   return (
     <ChatStateContext.Provider value={value}>
