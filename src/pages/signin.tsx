@@ -2,7 +2,7 @@ import { Provider } from 'next-auth/providers'
 import { getProviders, signIn, getSession, getCsrfToken } from 'next-auth/react'
 import { GetServerSideProps } from 'next/types'
 
-export const getServerSideProps: GetServerSideProps | {} = async (ctx: any) => {
+export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
   const { req } = ctx
   const session = await getSession({ req })
   if (session) {
