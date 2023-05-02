@@ -31,7 +31,7 @@ function SignInPage ({ providers }: { providers: Provider[] }) {
             <h1 className='mb-2 text-center text-3xl font-semibold'>Welcome</h1>
             <button
               className='rounded-sm border-2 p-4 px-8 duration-200 hover:bg-gray-100/50'
-              onClick={async () => await signIn(provider.id)}
+              onClick={async () => await signIn(provider.id, { callbackUrl: '/chats/general' })}
             >
               Sign in with {provider.name}
             </button>

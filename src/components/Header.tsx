@@ -36,7 +36,7 @@ export default function Header () {
                 href='/api/auth/signout'
                 onClick={(e) => {
                   e.preventDefault()
-                  void signOut()
+                  void signOut({ callbackUrl: '/' })
                 }}
               >
                 <li className='px-4 py-1 hover:bg-links'>
