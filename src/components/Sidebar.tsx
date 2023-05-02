@@ -1,11 +1,12 @@
 import { getDb } from '@/firebase'
-import { collection, doc, orderBy, query, where } from '@firebase/firestore'
+import { doc } from '@firebase/firestore'
 import Link from 'next/link'
 import React from 'react'
 import { useDocumentData } from 'react-firebase-hooks/firestore'
 import Header from './Header'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
+import { User } from '@/context/ChatContext'
 
 type Props = {}
 
@@ -26,10 +27,6 @@ const ChatList = () => {
   )
 }
 
-type User = {
-  username: string
-  id: string
-}
 const ChatCard = ({ id }: { id: string }) => {
   const db = getDb()
   const docRef = doc(db, 'chats', id)
@@ -43,7 +40,7 @@ const ChatCard = ({ id }: { id: string }) => {
     return (
       <Link href='/chats/general' className='flex items-center gap-3 p-2 hover:bg-white/20'>
         <Image
-          src='' alt=''
+          src='/' alt=''
           height={20} width={20}
           className='h-10 w-10 rounded-full bg-white'
         />
