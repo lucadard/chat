@@ -8,8 +8,7 @@ import { z } from 'zod'
 import { useRouter } from 'next/router'
 import PageLayout from '../PageLayout'
 import { getSession } from 'next-auth/react'
-
-const getAvatarById = (id: string, px = '40') => `https://avatars.githubusercontent.com/u/${id}?s=${px}&v=4`
+import { getAvatarById } from '@/lib'
 
 type Message = {
   createdAt: Timestamp
