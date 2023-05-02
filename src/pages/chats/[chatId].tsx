@@ -7,6 +7,10 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useRouter } from 'next/router'
 import PageLayout from '../PageLayout'
+import Protected from '@/components/Protected'
+import { getSession } from 'next-auth/react'
+
+const getAvatarById = (id: string, px = '40') => `https://avatars.githubusercontent.com/u/${id}?s=${px}&v=4`
 
 type Message = {
   createdAt: Timestamp
@@ -24,7 +28,7 @@ const Messages = ({ chatId }: { chatId: string }) => {
         const date = message.createdAt ? message.createdAt.toDate().toLocaleString() : ''
         return (
           <li key={i} className='mx-5 flex gap-4 py-2'>
-            <img src={`https://github.com/${message.username}.png?size=40`} alt='' className='h-10 w-10 rounded-full' />
+            <img src={getAvatarById('84546615')} alt='' className='h-10 w-10 rounded-full' />
             <div className='w-full'>
               <p className='whitespace-nowrap font-medium'>{message.username} <span className='text-sm font-thin'>{date}</span></p>
               <p className='break-all text-base'>
@@ -99,3 +103,16 @@ const Chat = () => {
 }
 
 export default Chat
+
+export const getServerSideProps: any = async (ctx: any) => {
+  const { req } = ctx
+  const session = await getSession({ req })
+  if (!session) {
+    return {
+      redirect: { destination: '/signin' }
+    }
+  }
+  return {
+    props: {}
+  }
+}
