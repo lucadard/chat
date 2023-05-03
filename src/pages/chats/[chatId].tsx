@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-closing-tag-location */
-import { getDb } from '@/firebase'
-import { Timestamp, addDoc, collection, orderBy, query, serverTimestamp } from '@firebase/firestore'
+import { getDb } from '@/firebase/firebase'
+import { collection, orderBy, query } from '@firebase/firestore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React from 'react'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
@@ -10,11 +10,13 @@ import ChatPageLayout from '../ChatPageLayout'
 import { getSession, useSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
-import { GetServerSideProps } from 'next'
+import { type GetServerSideProps } from 'next'
 import { useChat } from '@/context/ChatContext'
+import { firestore } from '@/firebase/admin'
+import axios from 'axios'
 
 type Message = {
-  createdAt: Timestamp
+  createdAt: string
   text: string
   user: {
     id: string
@@ -30,7 +32,7 @@ const Messages = () => {
   return (
     <ul className='flex flex-col-reverse pb-4'>
       {messages?.map((message, i) => {
-        const date = message.createdAt ? message.createdAt.toDate().toLocaleString() : ''
+        const date = message.createdAt ? new Date(message.createdAt).toLocaleString() : ''
         return (
           <li key={i} className='mx-5 flex gap-4 py-2'>
             <Image
@@ -57,7 +59,6 @@ type FormData = {
 const Input = () => {
   const { id: chatId } = useChat()
   const { data: session } = useSession()
-  const db = getDb()
   const { register, reset, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(z.object({ message: z.string().trim().min(1).max(300) })),
     defaultValues: { message: '' }
@@ -66,19 +67,17 @@ const Input = () => {
   async function handleFormSubmit (data: FormData) {
     reset()
     try {
-      const chatsRef = collection(db, 'chats')
-      await addDoc(collection(chatsRef, chatId, 'messages'), {
-        createdAt: serverTimestamp(),
-        text: data.message,
+      await axios.post('/api/post/message', {
+        chatId,
+        message: data.message,
         user: {
           id: session?.user.id,
           username: session?.user?.name
         }
       })
-    } catch (err) {
-      console.error('error writting document', err)
-    }
+    } catch (err) { console.error('Could not send message...') }
   }
+
   return (
     <form
       className='text-border-secondary z-10 mx-5 flex rounded-xl border border-secondary-border bg-secondary'
@@ -107,6 +106,20 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
       redirect: { destination: '/signin' }
     }
   }
+
+  const chatId = ctx.query.chatId
+  let userHasPermission = false
+  const docs = await firestore
+    .collection(`users/${session.user.name}/chats`)
+    .get()
+  docs.forEach(doc => { if (doc.data().id === chatId) { userHasPermission = true } })
+
+  if (!userHasPermission && chatId !== 'general') {
+    return {
+      redirect: { destination: '/chats/general' }
+    }
+  }
+
   return {
     props: {
       session
