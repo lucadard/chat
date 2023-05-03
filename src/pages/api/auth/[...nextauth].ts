@@ -14,6 +14,8 @@ export default NextAuth({
     signIn: '/signin'
   },
   callbacks: {
-    async signIn (data) { console.log(data); return true }
+    session (params) {
+      return { ...params.session, user: { ...params.session.user, id: params.token.sub } }
+    }
   }
 })
