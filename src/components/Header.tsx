@@ -12,7 +12,7 @@ export default function Header () {
 
   return (
     <OutsideAlerter active={open} callback={() => setOpen(false)}>
-      <header className='relative flex w-full select-none items-center justify-between'>
+      <header className='relative z-10 flex w-full select-none items-center justify-between'>
         <div
           onClick={() => setOpen(prev => !prev)}
           className='group flex cursor-pointer items-center'
