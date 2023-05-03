@@ -6,18 +6,20 @@ import React from 'react'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useRouter } from 'next/router'
 import ChatPageLayout from '../ChatPageLayout'
 import { getSession, useSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
-import { GetServerSideProps, GetStaticPaths } from 'next'
+import { GetServerSideProps } from 'next'
 import { useChat } from '@/context/ChatContext'
 
 type Message = {
   createdAt: Timestamp
   text: string
-  username: string
+  user: {
+    id: string
+    username: string
+  }
 }
 const Messages = () => {
   const { id: chatId } = useChat()
@@ -32,12 +34,12 @@ const Messages = () => {
         return (
           <li key={i} className='mx-5 flex gap-4 py-2'>
             <Image
-              src={getAvatarById('84546615')} alt=''
+              src={getAvatarById(message.user.id)} alt=''
               height={20} width={20}
               className='h-10 w-10 rounded-full'
             />
             <div className='w-full'>
-              <p className='whitespace-nowrap font-medium'>{message.username} <span className='text-sm font-thin'>{date}</span></p>
+              <p className='whitespace-nowrap font-medium'>{message.user?.username} <span className='text-sm font-thin'>{date}</span></p>
               <p className='break-all text-base'>
                 {message.text}
               </p>
@@ -68,7 +70,10 @@ const Input = () => {
       await addDoc(collection(chatsRef, chatId, 'messages'), {
         createdAt: serverTimestamp(),
         text: data.message,
-        username: session?.user?.name
+        user: {
+          id: session?.user.id,
+          username: session?.user?.name
+        }
       })
     } catch (err) {
       console.error('error writting document', err)
