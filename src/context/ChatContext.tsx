@@ -1,4 +1,4 @@
-import { getDb } from '@/firebase'
+import { getDb } from '@/firebase/firebase'
 import { doc, getDoc } from '@firebase/firestore'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
