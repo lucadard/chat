@@ -15,5 +15,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
   })
 
+  // updates lastActive field on chat document
+  firestore.doc(`/chats/${chatId}`)
+    .set({ lastActive: new Date().valueOf() })
+    .catch(console.error)
+
   res.status(200).json({ data: added.id })
 }
