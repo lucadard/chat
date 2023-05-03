@@ -1,5 +1,5 @@
-import { getDb } from '@/firebase'
-import { addDoc, collection, doc, query, serverTimestamp } from '@firebase/firestore'
+import { getDb } from '@/firebase/firebase'
+import { collection, doc, orderBy, query } from '@firebase/firestore'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore'
@@ -9,8 +9,7 @@ import Image from 'next/image'
 import { User } from '@/context/ChatContext'
 import { useSession } from 'next-auth/react'
 import OutsideAlerter from '@/hooks/useClickOutside'
-
-type Props = {}
+import axios from 'axios'
 
 const ChatList = () => {
   const { data: session } = useSession()
@@ -34,7 +33,6 @@ const ChatCard = ({ id }: { id: string }) => {
   const db = getDb()
   const docRef = doc(db, 'chats', id)
   const [chat] = useDocumentData(docRef)
-
   if (!chat) return null
 
   const otherUser = (chat.users?.filter((user: User) => user.username !== 'lucadard'))[0] as User
@@ -63,8 +61,7 @@ const ChatCard = ({ id }: { id: string }) => {
       <button
         className='ml-auto scale-[.7] text-sm hover:opacity-50'
         onClick={(e) => {
-          e.stopPropagation()
-          console.log('hola')
+          console.log('xd')
         }}
       >╳
       </button>
@@ -100,19 +97,14 @@ const SearchUser = () => {
     return () => clearTimeout(delayDebounceFn)
   }, [query])
 
-  const db = getDb()
   const { data: session } = useSession()
 
   async function handleSelect (user: Query['items'][0]) {
-    // setQuery(user.login)
     setQuery('')
     setSearchResults([])
     setInputFocus(false)
-    console.log('?')
     try {
-      const chatsRef = collection(db, 'chats')
-      const addedChat = await addDoc(chatsRef, {
-        createdAt: serverTimestamp(),
+      await axios.post('/api/post/chat', {
         users: [{
           id: session?.user.id,
           username: session?.user?.name
@@ -121,12 +113,7 @@ const SearchUser = () => {
           username: user.login
         }]
       })
-
-      const usersRef = collection(db, 'users', session!.user.name, 'chats')
-      await addDoc(usersRef, { id: addedChat.id })
-    } catch (err) {
-      console.error('error writting document', err)
-    }
+    } catch (err) { console.error('Could not add chat...') }
   }
 
   return (
@@ -164,7 +151,7 @@ const SearchUser = () => {
   )
 }
 
-const Sidebar = (props: Props) => {
+const Sidebar = () => {
   return (
     <div className='flex w-[240px] flex-col gap-5 border-r border-secondary-border bg-sidebar px-3 pt-5'>
       <div className='flex items-center gap-2'>
