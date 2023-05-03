@@ -1,9 +1,6 @@
 /* eslint-disable react/jsx-closing-tag-location */
-import { getDb } from '@/firebase/firebase'
-import { collection, orderBy, query } from '@firebase/firestore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React from 'react'
-import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import ChatPageLayout from '../ChatPageLayout'
@@ -14,20 +11,11 @@ import { type GetServerSideProps } from 'next'
 import { useChat } from '@/context/ChatContext'
 import { firestore } from '@/firebase/admin'
 import axios from 'axios'
+import { useMessages } from '@/hooks/useMessages'
 
-type Message = {
-  createdAt: string
-  text: string
-  user: {
-    id: string
-    username: string
-  }
-}
 const Messages = () => {
   const { id: chatId } = useChat()
-  const db = getDb()
-  const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'asc'))
-  const messages = useCollectionData(q)[0] as unknown as Message[]
+  const messages = useMessages(chatId)
 
   return (
     <ul className='flex flex-col pb-4'>
