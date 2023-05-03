@@ -26,11 +26,11 @@ type Message = {
 const Messages = () => {
   const { id: chatId } = useChat()
   const db = getDb()
-  const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'desc'))
+  const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'asc'))
   const messages = useCollectionData(q)[0] as unknown as Message[]
 
   return (
-    <ul className='flex flex-col-reverse pb-4'>
+    <ul className='flex flex-col pb-4'>
       {messages?.map((message, i) => {
         const date = message.createdAt ? new Date(message.createdAt).toLocaleString() : ''
         return (
