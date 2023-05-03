@@ -1,10 +1,13 @@
 import Sidebar from '@/components/Sidebar'
-import { ChatProvider, useChat } from '@/context/ChatContext'
+import { ChatProvider, User, useChat } from '@/context/ChatContext'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { getDb } from '@/firebase/firebase'
+import { doc } from '@firebase/firestore'
+import { useDocumentData } from 'react-firebase-hooks/firestore'
 
 type Props = {
   children: React.ReactNode
@@ -15,13 +18,27 @@ const Upper = ({ section, setSection }: {
   setSection: React.Dispatch<React.SetStateAction<'chat' | 'info'>>
 }) => {
   const { name: chatName, id } = useChat()
+  const isGeneral = chatName === 'general'
+  const db = getDb()
+  const docRef = doc(db, 'users', chatName)
+  const [user, loading] = useDocumentData(docRef) as unknown as [User, boolean]
   const disable = id === 'general'
+
   return (
     <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>
-      <div className='flex cursor-default items-center gap-1 pb-3 text-xl text-links'>
-        <span>chats</span>
-        <span className='text-gray-400'>/</span>
-        <span className='font-semibold'>{chatName}</span>
+      <div className={`h-10 cursor-default pb-3 text-xl text-links ${!user && !isGeneral ? 'opacity-50' : ''}`}>
+        {!loading &&
+          <>
+            <span>chats</span>
+            <span className='mx-1 text-gray-400'>/</span>
+            <span className='font-semibold'>{chatName}</span>
+            {!isGeneral &&
+              <span className='ml-2 text-sm text-gray-300'>last active:{' '}
+                {user?.lastActive
+                  ? new Date(user.lastActive).toLocaleString()
+                  : 'never'}
+              </span>}
+          </>}
       </div>
       <div
         className='flex gap-2'
