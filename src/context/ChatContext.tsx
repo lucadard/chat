@@ -7,6 +7,7 @@ import { createContext, useContext, ReactNode, useEffect, useState } from 'react
 export type User = {
   id: string
   username: string
+  lastActive?: number
 }
 
 type State = { id: string, name: string, userData: User | undefined }
