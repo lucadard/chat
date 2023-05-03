@@ -1,3 +1,4 @@
+import { firestore } from '@/firebase/admin'
 import NextAuth from 'next-auth'
 import GithubProvider from 'next-auth/providers/github'
 
@@ -15,6 +16,9 @@ export default NextAuth({
   },
   callbacks: {
     session (params) {
+      params.session.user && firestore.doc(`/users/${params.session.user.name}`)
+        .set({ lastActive: new Date().valueOf() }, { merge: true })
+        .catch(console.error)
       return { ...params.session, user: { ...params.session.user, id: params.token.sub } }
     }
   }
