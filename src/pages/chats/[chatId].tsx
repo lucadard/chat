@@ -1,22 +1,21 @@
 /* eslint-disable react/jsx-closing-tag-location */
 import { zodResolver } from '@hookform/resolvers/zod'
-import React from 'react'
-import { useForm } from 'react-hook-form'
+import React, { useEffect } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import ChatPageLayout from '../ChatPageLayout'
 import { getSession, useSession } from 'next-auth/react'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
 import { type GetServerSideProps } from 'next'
-import { useChat } from '@/context/ChatContext'
-import { firestore } from '@/firebase/admin'
-import axios from 'axios'
+import { ChatProvider, useChat } from '@/context/ChatContext'
 import { useMessages } from '@/hooks/useMessages'
+import { Session } from 'next-auth'
+import axios from 'axios'
+import { firestore } from '@/firebase/admin'
 
 const Messages = () => {
-  const { id: chatId } = useChat()
-  const messages = useMessages(chatId)
-
+  const { messages } = useChat()
   return (
     <ul className='flex flex-col pb-4'>
       {messages?.map((message, i) => {
@@ -41,22 +40,35 @@ const Messages = () => {
   )
 }
 
-type FormData = {
-  message: string
-}
+type FormData = { message: string }
 const Input = () => {
-  const { id: chatId } = useChat()
-  const { data: session } = useSession()
+  const { currentChatData, removeNewChat, session } = useChat()
   const { register, reset, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(z.object({ message: z.string().trim().min(1).max(300) })),
     defaultValues: { message: '' }
   })
 
   async function handleFormSubmit (data: FormData) {
+    let newChatId = ''
+    if (currentChatData?.id === 'new') {
+      try {
+        const res = await axios.post<{ id: string }>('/api/post/chat', {
+          users: [{
+            id: session?.user.id,
+            username: session?.user.name
+          }, {
+            id: currentChatData.user?.id,
+            username: currentChatData.user?.username
+          }]
+        })
+        newChatId = res.data.id
+        removeNewChat()
+      } catch (err) { console.error('Could not create new chat...') }
+    }
     reset()
     try {
       await axios.post('/api/post/message', {
-        chatId,
+        chatId: newChatId || (currentChatData?.id ?? 'general'),
         message: data.message,
         user: {
           id: session?.user.id,
@@ -95,14 +107,16 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
     }
   }
 
-  const chatId = ctx.query.chatId
+  const permittedRoutes = ['general', 'new']
+
+  const chatId = ctx.query.chatId as string
   let userHasPermission = false
   const docs = await firestore
     .collection(`users/${session.user.name}/chats`)
     .get()
   docs.forEach(doc => { if (doc.data().id === chatId) { userHasPermission = true } })
 
-  if (!userHasPermission && chatId !== 'general') {
+  if (!userHasPermission && permittedRoutes?.includes(chatId)) {
     return {
       redirect: { destination: '/chats/general' }
     }
@@ -115,16 +129,18 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
   }
 }
 
-const Chat = () => {
+const Chat = ({ session }: { session: Session }) => {
   return (
-    <ChatPageLayout>
-      <div className='relative -mb-3 basis-full'>
-        <div className='absolute inset-0 overflow-y-scroll'>
-          <Messages />
+    <ChatProvider session={session}>
+      <ChatPageLayout>
+        <div className='relative -mb-3 basis-full'>
+          <div className='absolute inset-0 overflow-y-scroll'>
+            <Messages />
+          </div>
         </div>
-      </div>
-      <Input />
-    </ChatPageLayout>
+        <Input />
+      </ChatPageLayout>
+    </ChatProvider>
   )
 }
 
