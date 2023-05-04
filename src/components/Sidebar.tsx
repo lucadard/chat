@@ -1,71 +1,61 @@
-import { getDb } from '@/firebase/firebase'
-import { collection, doc, orderBy, query } from '@firebase/firestore'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore'
 import Header from './Header'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
-import { User } from '@/context/ChatContext'
-import { useSession } from 'next-auth/react'
+import { useChat } from '@/context/ChatContext'
 import OutsideAlerter from '@/hooks/useClickOutside'
-import axios from 'axios'
+import { Chat } from '@/types/types'
 
 const ChatList = () => {
-  const { data: session } = useSession()
-  const db = getDb()
-  const q = query(collection(db, 'users', session!.user.name, 'chats'))
-  const chats = useCollectionData(q)[0] as Array<{ id: string }> ?? []
+  const { chats, newChat } = useChat()
 
   return (
     <ul className='flex flex-col'>
-      <ChatCard id='general' />
-      {chats.map(({ id }) => (
-        <li key={id}>
-          <ChatCard id={id} />
-        </li>
-      ))}
+      <Link href='/chats/general'>
+        <ChatCard isGeneral />
+      </Link>
+      <Link href='/chats/new'>
+        <ChatCard chat={newChat} />
+      </Link>
+      {Object.entries(chats).map(([id, chat]) => {
+        return (
+          <Link key={id} href={`/chats/${id}`}>
+            <ChatCard chat={chat} />
+          </Link>
+        )
+      }
+      )}
     </ul>
   )
 }
 
-const ChatCard = ({ id }: { id: string }) => {
-  const db = getDb()
-  const docRef = doc(db, 'chats', id)
-  const [chat] = useDocumentData(docRef)
-  if (!chat) return null
-
-  const otherUser = (chat.users?.filter((user: User) => user.username !== 'lucadard'))[0] as User
-
-  if (id === 'general') {
+const ChatCard = ({ chat, isGeneral = false }: { chat?: Chat | undefined, isGeneral?: boolean }) => {
+  const { session } = useChat()
+  if (isGeneral) {
     return (
-      <Link href='/chats/general' className='flex items-center gap-3 p-2 hover:bg-white/20'>
+      <li className='flex items-center gap-3 p-2 hover:bg-white/20'>
         <Image
           src='/group_icon.svg' alt=''
           height={20} width={20}
           className='h-10 w-10 rounded-full'
         />
         <span>General</span>
-      </Link>
+      </li>
     )
   }
 
+  if (!chat) return null
+  const [displayedUser] = (chat?.users?.filter(user => user.username !== session?.user.name))
   return (
-    <Link href={`/chats/${id}`} className='flex items-center gap-3 p-2 hover:bg-white/20'>
+    <li className='flex items-center gap-3 p-2 hover:bg-white/20'>
       <Image
-        src={getAvatarById(otherUser?.id)} alt=''
+        src={getAvatarById(displayedUser.id)} alt=''
         height={20} width={20}
         className='h-10 w-10 rounded-full'
       />
-      <p className='overflow-hidden text-ellipsis'>{otherUser?.username}</p>
-      <button
-        className='ml-auto scale-[.7] text-sm hover:opacity-50'
-        onClick={(e) => {
-          console.log('xd')
-        }}
-      >╳
-      </button>
-    </Link>
+      <p className='overflow-hidden text-ellipsis'>{displayedUser.username}</p>
+    </li>
   )
 }
 
@@ -79,7 +69,7 @@ const SearchUser = () => {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Query['items']>([])
   const [inputFocus, setInputFocus] = useState(false)
-
+  const { setNewChat, session } = useChat()
   useEffect(() => {
     if (!inputFocus) return
     if (!query) return setSearchResults([])
@@ -91,29 +81,27 @@ const SearchUser = () => {
 
     const delayDebounceFn = setTimeout(() => {
       getSearchResults(query)
-        .then((data: Query) => setSearchResults(data.items.slice(0, 5)))
+        .then((data: Query) =>
+          setSearchResults(data.items
+            .filter(u => u.login !== session?.user.name)
+            .slice(0, 5)))
         .catch(console.error)
     }, 1000)
     return () => clearTimeout(delayDebounceFn)
   }, [query])
 
-  const { data: session } = useSession()
-
   async function handleSelect (user: Query['items'][0]) {
     setQuery('')
     setSearchResults([])
     setInputFocus(false)
-    try {
-      await axios.post('/api/post/chat', {
-        users: [{
-          id: session?.user.id,
-          username: session?.user?.name
-        }, {
-          id: user.id,
-          username: user.login
-        }]
-      })
-    } catch (err) { console.error('Could not add chat...') }
+    setNewChat({
+      id: user.id,
+      messages: [],
+      users: [
+        { id: user.id, username: user.login },
+        { id: session!.user.id, username: session!.user.name }
+      ]
+    })
   }
 
   return (

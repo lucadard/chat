@@ -1,13 +1,11 @@
 import Sidebar from '@/components/Sidebar'
-import { ChatProvider, User, useChat } from '@/context/ChatContext'
+import { useChat } from '@/context/ChatContext'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { getDb } from '@/firebase/firebase'
-import { doc } from '@firebase/firestore'
-import { useDocumentData } from 'react-firebase-hooks/firestore'
+import { useLastActive } from '@/hooks/useUserLastActive'
 
 type Props = {
   children: React.ReactNode
@@ -17,43 +15,34 @@ const Upper = ({ section, setSection }: {
   section: 'chat' | 'info'
   setSection: React.Dispatch<React.SetStateAction<'chat' | 'info'>>
 }) => {
-  const { name: chatName, id } = useChat()
-  const isGeneral = chatName === 'general'
-  const db = getDb()
-  const docRef = doc(db, 'users', chatName)
-  const [user, loading] = useDocumentData(docRef) as unknown as [User, boolean]
-  const disable = id === 'general'
-
+  const { currentChatData } = useChat()
+  const isGeneral = !currentChatData?.id
+  const lastActive = useLastActive(currentChatData?.user?.username)
   return (
     <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>
-      <div className={`h-10 cursor-default pb-3 text-xl text-links ${!user && !isGeneral ? 'opacity-50' : ''}`}>
-        {!loading &&
-          <>
-            <span>chats</span>
-            <span className='mx-1 text-gray-400'>/</span>
-            <span className='font-semibold'>{chatName}</span>
-            {!isGeneral &&
-              <span className='ml-2 text-sm text-gray-300'>last active:{' '}
-                {user?.lastActive
-                  ? new Date(user.lastActive).toLocaleString()
-                  : 'never'}
-              </span>}
-          </>}
+      <div className={`h-10 cursor-default pb-3 text-xl text-links ${lastActive === 'never' ? 'opacity-50' : ''}`}>
+        <span>chats</span>
+        <span className='mx-1 text-gray-400'>/</span>
+        <span className='font-semibold'>{currentChatData?.name}</span>
+        {lastActive &&
+          <span className='ml-2 text-sm text-gray-300'>
+            last active: {lastActive}
+          </span>}
       </div>
       <div
         className='flex gap-2'
       >
         <div
           className={`flex cursor-pointer items-center gap-2 border-orange-600 p-2 pb-3 ${section === 'chat' ? 'border-b' : ''}`}
-          onClick={() => !disable && setSection('chat')}
+          onClick={() => !isGeneral && setSection('chat')}
         >
           <span>{'<>'}</span>
           <p>Chat</p>
         </div>
-        {!disable &&
+        {!isGeneral &&
           <div
             className={`flex cursor-pointer items-center gap-2 border-orange-600 p-2 pb-3 ${section === 'info' ? 'border-b' : ''}`}
-            onClick={() => !disable && setSection('info')}
+            onClick={() => !isGeneral && setSection('info')}
           >
             <span>◴</span>
             <p>User</p>
@@ -65,17 +54,17 @@ const Upper = ({ section, setSection }: {
 
 const UserData = () => {
   const [userInfo, setUserInfo] = useState<any>(undefined)
-  const { userData } = useChat()
+  const { currentChatData } = useChat()
 
   useEffect(() => {
-    if (!userData) return
+    if (!currentChatData?.user) return
 
-    async function getUserData (username: string) {
+    async function getCurrentUserData (username: string) {
       const res = await fetch(`/api/github/user/${username}`)
       return (await res.json()).data
     }
-    getUserData(userData.username).then(setUserInfo).catch(console.error)
-  }, [userData])
+    getCurrentUserData(currentChatData.user?.username).then(setUserInfo).catch(console.error)
+  }, [currentChatData.user])
 
   if (!userInfo) return null
 
@@ -104,20 +93,18 @@ const ChatPageLayout = ({ children }: Props) => {
     setSection('chat')
   }, [router.query])
   return (
-    <ChatProvider>
-      <div className='flex h-screen'>
-        <Sidebar />
-        <main className='flex h-screen flex-1 flex-col'>
-          <Upper section={section} setSection={setSection} />
-          <section className={`flex basis-full flex-col justify-end pb-5 ${section !== 'chat' ? 'hidden' : ''}`}>
-            {children}
-          </section>
-          <div className={`${section !== 'info' ? 'hidden' : ''}`}>
-            <UserData />
-          </div>
-        </main>
-      </div>
-    </ChatProvider>
+    <div className='flex h-screen'>
+      <Sidebar />
+      <main className='flex h-screen flex-1 flex-col'>
+        <Upper section={section} setSection={setSection} />
+        <section className={`flex basis-full flex-col justify-end pb-5 ${section !== 'chat' ? 'hidden' : ''}`}>
+          {children}
+        </section>
+        <div className={`${section !== 'info' ? 'hidden' : ''}`}>
+          <UserData />
+        </div>
+      </main>
+    </div>
   )
 }
 
