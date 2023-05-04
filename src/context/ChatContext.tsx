@@ -30,7 +30,7 @@ function ChatProvider ({ session, children }: ChatProviderProps) {
   const router = useRouter()
   const chatId = router.query.chatId as string
 
-  const chats = useChats(session.user)
+  const chats = useChats(session?.user)
   const currentChat = chats[selectedChat]
   const currentUserData = currentChat?.users.filter((user) => user.username !== session?.user?.name)[0] ?? newChat?.users[0]
 

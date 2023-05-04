@@ -27,7 +27,7 @@ export const useChats = (sessionUser: User): ChatsMap => {
       setChats(chats)
     })
     return () => unsubscribe()
-  }, [sessionUser.id])
+  }, [sessionUser])
 
   return chats
 }
