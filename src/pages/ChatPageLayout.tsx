@@ -1,13 +1,15 @@
 import Sidebar from '@/components/Sidebar'
-import { useChat } from '@/context/ChatContext'
+import { ChatProvider, useChat } from '@/context/ChatContext'
 import { getAvatarById } from '@/lib'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useLastActive } from '@/hooks/useUserLastActive'
+import { Session } from 'next-auth'
 
 type Props = {
+  session: Session
   children: React.ReactNode
 }
 
@@ -86,25 +88,27 @@ const UserData = () => {
   )
 }
 
-const ChatPageLayout = ({ children }: Props) => {
+const ChatPageLayout = ({ session, children }: Props) => {
   const router = useRouter()
   const [section, setSection] = useState<'chat' | 'info'>('chat')
   useEffect(() => {
     setSection('chat')
   }, [router.query])
   return (
-    <div className='flex h-screen'>
-      <Sidebar />
-      <main className='flex h-screen flex-1 flex-col'>
-        <Upper section={section} setSection={setSection} />
-        <section className={`flex basis-full flex-col justify-end pb-5 ${section !== 'chat' ? 'hidden' : ''}`}>
-          {children}
-        </section>
-        <div className={`${section !== 'info' ? 'hidden' : ''}`}>
-          <UserData />
-        </div>
-      </main>
-    </div>
+    <ChatProvider session={session}>
+      <div className='flex h-screen'>
+        <Sidebar />
+        <main className='flex h-screen flex-1 flex-col'>
+          <Upper section={section} setSection={setSection} />
+          <section className={`flex basis-full flex-col justify-end pb-5 ${section !== 'chat' ? 'hidden' : ''}`}>
+            {children}
+          </section>
+          <div className={`${section !== 'info' ? 'hidden' : ''}`}>
+            <UserData />
+          </div>
+        </main>
+      </div>
+    </ChatProvider>
   )
 }
 

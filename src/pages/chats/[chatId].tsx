@@ -131,16 +131,14 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
 
 const Chat = ({ session }: { session: Session }) => {
   return (
-    <ChatProvider session={session}>
-      <ChatPageLayout>
-        <div className='relative -mb-3 basis-full'>
-          <div className='absolute inset-0 overflow-y-scroll'>
-            <Messages />
-          </div>
+    <ChatPageLayout session={session}>
+      <div className='relative -mb-3 basis-full'>
+        <div className='absolute inset-0 overflow-y-scroll'>
+          <Messages />
         </div>
-        <Input />
-      </ChatPageLayout>
-    </ChatProvider>
+      </div>
+      <Input />
+    </ChatPageLayout>
   )
 }
 
