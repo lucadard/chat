@@ -2,7 +2,10 @@ import { getDb } from '@/firebase/firebase'
 import { Message } from '@/types/types'
 import { collection, limit, onSnapshot, orderBy, query } from '@firebase/firestore'
 import { useEffect, useState } from 'react'
-
+/**
+* Retrieves messages from the given chatId and
+* keeps listening for new changes
+*/
 export const useMessages = (chatId: string): Message[] => {
   const [messages, setMessages] = useState<Message[]>([])
   const db = getDb()

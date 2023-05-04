@@ -1,5 +1,6 @@
-import { User } from '@/context/ChatContext'
+
 import { firestore } from '@/firebase/admin'
+import { User } from '@/types/types'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 // eslint-disable-next-line import/no-anonymous-default-export
