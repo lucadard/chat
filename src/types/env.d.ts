@@ -1,3 +1,5 @@
+import { ServiceAccount } from 'firebase-admin'
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 namespace NodeJS {
   interface ProcessEnv extends NodeJS.ProcessEnv {
@@ -5,5 +7,6 @@ namespace NodeJS {
     GITHUB_ID: string
     GITHUB_SECRET: string
     GITHUB_APIKEY: string
+    FIREBASE_SERVICE_ACCOUNT_KEYS: ServiceAccount
   }
 }
