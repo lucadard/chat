@@ -1,40 +1,60 @@
-import { getDb } from '@/firebase/firebase'
-import { doc, getDoc } from '@firebase/firestore'
-import { useSession } from 'next-auth/react'
+import { useChats } from '@/hooks/useChats'
+import { useMessages } from '@/hooks/useMessages'
+import { type Chat, ChatsMap, User, Message } from '@/types/types'
+import { type Session } from 'next-auth'
 import { useRouter } from 'next/router'
-import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 
-export type User = {
-  id: string
-  username: string
-  lastActive?: number
+type State = {
+  currentChatData: {
+    lastActive?: number
+    id: string
+    name: string | undefined
+    user?: User
+  }
+  chats: ChatsMap
+  messages: Message[]
+  newChat: Chat | undefined
+  setNewChat: (chat: Chat) => void
+  removeNewChat: () => void
+  session?: Session
 }
-
-type State = { id: string, name: string, userData: User | undefined }
-type ChatProviderProps = { children: ReactNode }
+type ChatProviderProps = { session: Session, children: ReactNode }
 
 const ChatStateContext = createContext<State | undefined>(undefined)
 
-function ChatProvider ({ children }: ChatProviderProps) {
-  const { query } = useRouter()
-  const { data: session } = useSession()
-  const [users, setUsers] = useState<User[]>([])
-  const chatId = query.chatId as string
-  const db = getDb()
+function ChatProvider ({ session, children }: ChatProviderProps) {
+  const [newChat, setNewChat] = useState<Chat>()
+  const [selectedChat, setSelectedChat] = useState<keyof ChatsMap>('general')
 
-  useEffect(() => {
-    if (!chatId) return
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const docSnap = getDoc(doc(db, 'chats', chatId)).then(
-      docSnap => docSnap.exists() && setUsers(docSnap.data().users as User[]))
-  }, [chatId])
+  const router = useRouter()
+  const chatId = router.query.chatId as string
 
-  const userData = users?.filter((user: User) => user.username !== session?.user?.name)[0] ?? undefined
+  const chats = useChats(session.user)
+  const currentChat = chats[selectedChat]
+  const currentUserData = currentChat?.users.filter((user) => user.username !== session?.user?.name)[0] ?? newChat?.users[0]
+
+  const messages = useMessages(selectedChat !== 'new' ? chatId ?? 'general' : 'none')
+
+  useEffect(() => { setSelectedChat(chatId) }, [chatId])
 
   const value = {
-    id: chatId,
-    name: chatId === 'general' || !userData ? 'general' : userData.username,
-    userData
+    currentChatData: {
+      id: selectedChat === 'new' ? 'new' : chatId,
+      lastActive: currentChat?.lastActive,
+      user: currentUserData,
+      name: selectedChat === 'new' ? newChat?.users[0].username : currentUserData?.username ?? 'general'
+    },
+    newChat,
+    chats,
+    messages,
+    removeNewChat: () => { setNewChat(undefined) },
+    setNewChat: (chat: Chat) => {
+      setNewChat(chat)
+      void router.push('/chats/new', undefined, { shallow: true })
+      setSelectedChat('new')
+    },
+    session
   }
   return (
     <ChatStateContext.Provider value={value}>
