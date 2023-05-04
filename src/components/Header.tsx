@@ -3,12 +3,11 @@ import { signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
 import OutsideAlerter from '@/hooks/useClickOutside'
 import Image from 'next/image'
+import { useChat } from '@/context/ChatContext'
 
 export default function Header () {
-  const { data: session } = useSession()
+  const { session } = useChat()
   const [open, setOpen] = useState(false)
-
-  if (!session?.user) return null
 
   return (
     <OutsideAlerter active={open} callback={() => setOpen(false)}>
@@ -18,7 +17,7 @@ export default function Header () {
           className='group flex cursor-pointer items-center'
         >
           <Image
-            src={session.user.image ?? ''} alt=''
+            src={session?.user.image ?? ''} alt=''
             height={20} width={20}
             className='h-5 w-5 rounded-full border border-transparent outline outline-[1px] outline-secondary-border'
           />
@@ -30,7 +29,7 @@ export default function Header () {
             <ul className='mt-2 rounded-lg border border-secondary-border bg-nav py-2'>
               <li className='cursor-default px-4 py-1'>
                 <p className='whitespace-nowrap'>
-                  Signed in as <strong>{session.user.name}</strong>
+                  Signed in as <strong>{session?.user.name}</strong>
                 </p>
               </li>
               <div className='my-2 h-[1px] bg-secondary-border' />
