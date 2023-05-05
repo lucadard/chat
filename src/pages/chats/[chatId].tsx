@@ -122,15 +122,13 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
     }
   }
 
-  const permittedRoutes = ['general', 'new']
+  const permittedRoutes = ['general']
 
   const chatId = ctx.query.chatId as string
-  let userHasPermission = false
-  const docs = await firestore
-    .collection(`users/${session.user.name}/chats`)
-    .get()
-  docs.forEach(doc => { if (doc.data().id === chatId) { userHasPermission = true } })
-
+  const userRef = await firestore
+    .doc(`users/${session.user.name}`)
+  const doc = await userRef.get()
+  const userHasPermission = Object.keys(doc.data() as {}).find(chat => chatId === chat)
   if (!userHasPermission && !permittedRoutes?.includes(chatId)) {
     return {
       redirect: { destination: '/chats/general' }
