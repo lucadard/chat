@@ -6,22 +6,35 @@ import Image from 'next/image'
 import { useChat } from '@/context/ChatContext'
 import OutsideAlerter from '@/hooks/useClickOutside'
 import { Chat } from '@/types/types'
+import { useRouter } from 'next/router'
 
 const ChatList = () => {
-  const { chats, newChat } = useChat()
+  const { chats } = useChat()
+  const router = useRouter()
 
+  const chatList = Object.entries(chats) as unknown as Array<[string, Chat]>
   return (
     <ul className='flex flex-col'>
-      <Link href='/chats/general'>
+      <Link
+        onClick={(e) => {
+          e.preventDefault()
+          void router.push('/chats/general', undefined, { shallow: true })
+        }}
+        href='/chats/general'
+      >
         <ChatCard isGeneral />
       </Link>
-      <Link href='/chats/new'>
-        <ChatCard chat={newChat} />
-      </Link>
-      {Object.entries(chats).map(([id, chat]) => {
+      {chatList.sort(([_a, chatA], [_b, chatB]) => chatB.lastActive - chatA.lastActive).map(([id, chat]) => {
         return (
-          <Link key={id} href={`/chats/${id}`}>
-            <ChatCard chat={chat} />
+          <Link
+            key={id}
+            onClick={(e) => {
+              e.preventDefault()
+              void router.push(`/chats/${id}`, undefined, { shallow: true })
+            }}
+            href={`/chats/${id}`}
+          >
+            <ChatCard id={id} info={chat} />
           </Link>
         )
       }
@@ -30,11 +43,12 @@ const ChatList = () => {
   )
 }
 
-const ChatCard = ({ chat, isGeneral = false }: { chat?: Chat | undefined, isGeneral?: boolean }) => {
-  const { session } = useChat()
+const ChatCard = ({ id, info, isGeneral = false }: { id?: string, info?: Chat | undefined, isGeneral?: boolean }) => {
+  const { query } = useRouter()
+  const selectedChat = query.chatId
   if (isGeneral) {
     return (
-      <li className='flex items-center gap-3 p-2 hover:bg-white/20'>
+      <li className={`flex items-center gap-3 rounded-sm p-2  ${selectedChat === 'general' ? 'bg-white/20' : 'hover:bg-white/10'}`}>
         <Image
           src='/group_icon.svg' alt=''
           height={20} width={20}
@@ -44,17 +58,15 @@ const ChatCard = ({ chat, isGeneral = false }: { chat?: Chat | undefined, isGene
       </li>
     )
   }
-
-  if (!chat) return null
-  const [displayedUser] = (chat?.users?.filter(user => user.username !== session?.user.name))
+  if (!info || !id) return null
   return (
-    <li className='flex items-center gap-3 p-2 hover:bg-white/20'>
+    <li className={`flex items-center gap-3 p-2 ${selectedChat === id ? 'bg-white/20' : 'hover:bg-white/10'}`}>
       <Image
-        src={getAvatarById(displayedUser.id)} alt=''
+        src={getAvatarById(id)} alt=''
         height={20} width={20}
         className='h-10 w-10 rounded-full'
       />
-      <p className='overflow-hidden text-ellipsis'>{displayedUser.username}</p>
+      <p className='overflow-hidden text-ellipsis'>{info.name}</p>
     </li>
   )
 }
@@ -69,7 +81,8 @@ const SearchUser = () => {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Query['items']>([])
   const [inputFocus, setInputFocus] = useState(false)
-  const { setNewChat, session } = useChat()
+  const { session, chats, setClientChat } = useChat()
+  const router = useRouter()
   useEffect(() => {
     if (!inputFocus) return
     if (!query) return setSearchResults([])
@@ -90,18 +103,18 @@ const SearchUser = () => {
     return () => clearTimeout(delayDebounceFn)
   }, [query])
 
-  async function handleSelect (user: Query['items'][0]) {
+  function handleSelect (user: Query['items'][0]) {
     setQuery('')
     setSearchResults([])
     setInputFocus(false)
-    setNewChat({
-      id: user.id,
-      messages: [],
-      users: [
-        { id: user.id, username: user.login },
-        { id: session!.user.id, username: session!.user.name }
-      ]
-    })
+    if (!Object.keys(chats).includes(`${user.id}`)) {
+      setClientChat(user.id, {
+        chat_id: 'none',
+        lastActive: new Date().valueOf(),
+        name: user.login
+      })
+    }
+    void router.push(`/chats/${user.id}`, undefined, { shallow: true })
   }
 
   return (
@@ -122,7 +135,7 @@ const SearchUser = () => {
               <li
                 key={user.id}
                 className='flex cursor-pointer items-center gap-2 p-2 hover:bg-links'
-                onClick={async () => await handleSelect(user)}
+                onClick={() => handleSelect(user)}
               >
                 <Image
                   src={getAvatarById(user.id, '10')} alt=''
