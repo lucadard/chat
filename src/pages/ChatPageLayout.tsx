@@ -19,18 +19,22 @@ const Upper = ({ section, setSection }: {
   section: 'chat' | 'info'
   setSection: React.Dispatch<React.SetStateAction<'chat' | 'info'>>
 }) => {
-  const { currentChat, session } = useChat()
+  const { currentChat, session, removeClientChat } = useChat()
   const router = useRouter()
   const isGeneral = !currentChat
   const lastActive = useUserLastActive(currentChat?.name)
 
-  function handleRemoveChat () {
-    axios.post('/api/delete/chatFromUser', {
-      username: session?.user.name,
-      id: router.query.chatId
-    })
-      .then(async () => await router.push('/chats/general', undefined, { shallow: true }))
-      .catch(console.error)
+  async function handleRemoveChat () {
+    if (currentChat?.chat_id === 'none') removeClientChat(router.query.chatId as string)
+    else {
+      try {
+        await axios.post('/api/delete/chatFromUser', {
+          username: session?.user.name,
+          id: router.query.chatId
+        })
+      } catch (err) { console.error(err) }
+    }
+    void router.push('/chats/general', undefined, { shallow: true })
   }
   return (
     <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>

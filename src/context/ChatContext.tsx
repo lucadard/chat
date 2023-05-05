@@ -10,7 +10,7 @@ type State = {
   chats: ChatsMap
   session?: Session
   setClientChat: (id: string, chat: Chat) => void
-  removeClientChat: (newId: string) => void
+  removeClientChat: (id: string) => void
 }
 type ChatProviderProps = { session: Session, children: ReactNode }
 
