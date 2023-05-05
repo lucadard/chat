@@ -10,22 +10,37 @@ dayjs.extend(relativeTime)
 * Retrieves last active from given userd
 * keeps listening for new changes
 */
-export const useLastActive = (username?: string): 'never' | string | undefined => {
-  const [lastActive, setLastActive] = useState<string>()
+export const useUserLastActive = (username?: string): 'loading' | 'never' | string | undefined => {
+  const [message, setMessage] = useState<'loading' | 'never' | string | undefined>('loading')
+  const [lastActive, setLastActive] = useState<number>()
   const db = getDb()
 
   useEffect(() => {
-    if (!username) return
+    if (lastActive === undefined) return
+    if (lastActive === 0) return setMessage('never')
+    setMessage(dayjs(lastActive).fromNow())
+    const interval = setInterval(() => {
+      setMessage(dayjs(lastActive).fromNow())
+    }, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [lastActive])
+
+  useEffect(() => {
+    setMessage('loading')
+    if (!username) return setMessage(undefined)
     const q = doc(db, 'users', username)
 
     const unsubscribe = onSnapshot(q, (DocumentSnapshot) => {
-      if (!DocumentSnapshot.exists()) return setLastActive('never')
+      if (!DocumentSnapshot.exists()) return setLastActive(0)
 
       const data = DocumentSnapshot.data() as User
-      setLastActive(dayjs(data.lastActive).fromNow())
+
+      data.lastActive
+        ? setLastActive(data.lastActive)
+        : setLastActive(0)
     })
     return () => { unsubscribe(); setLastActive(undefined) }
   }, [username])
 
-  return lastActive
+  return message
 }
