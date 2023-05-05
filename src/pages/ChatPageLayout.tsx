@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useUserLastActive } from '@/hooks/useUserLastActive'
 import { Session } from 'next-auth'
+import axios from 'axios'
 
 type Props = {
   session: Session
@@ -18,11 +19,19 @@ const Upper = ({ section, setSection }: {
   section: 'chat' | 'info'
   setSection: React.Dispatch<React.SetStateAction<'chat' | 'info'>>
 }) => {
-  const { currentChat } = useChat()
-
+  const { currentChat, session } = useChat()
+  const router = useRouter()
   const isGeneral = !currentChat
   const lastActive = useUserLastActive(currentChat?.name)
 
+  function handleRemoveChat () {
+    axios.post('/api/delete/chatFromUser', {
+      username: session?.user.name,
+      id: router.query.chatId
+    })
+      .then(async () => await router.push('/chats/general', undefined, { shallow: true }))
+      .catch(console.error)
+  }
   return (
     <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>
       <div className={`h-10 cursor-default pb-3 text-xl text-links ${lastActive === 'never' ? 'opacity-50' : ''}`}>
@@ -52,6 +61,15 @@ const Upper = ({ section, setSection }: {
             <span>◴</span>
             <p>User</p>
           </div>}
+          <div className='ml-auto grid place-content-center'>
+          {currentChat &&
+          <button
+            onClick={handleRemoveChat}
+            className=' grid h-8 cursor-pointer place-content-center items-center rounded-md border border-secondary-text/30 bg-sidebar p-2 px-4 pb-3 text-sm font-semibold text-red-500 duration-100 hover:border-red-400 hover:bg-red-500 hover:text-white'
+          >
+            <p className='-mb-1 h-min'>Remove</p>
+          </button>}
+          </div>
       </div>
     </div>
   )
