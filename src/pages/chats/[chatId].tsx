@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-closing-tag-location */
-import React from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { type GetServerSideProps } from 'next'
 import { Session } from 'next-auth'
@@ -16,30 +16,44 @@ import { firestore } from '@/firebase/admin'
 import { getAvatarById } from '@/lib'
 import { useChat } from '@/context/ChatContext'
 import ChatPageLayout from '../ChatPageLayout'
+import { useMessages } from '@/hooks/useMessages'
+import useStayScrolled from 'react-stay-scrolled'
 
 const Messages = () => {
-  const { messages } = useChat()
+  const { currentChat } = useChat()
+  const { messages, getMoreMessages, isMoreMessages } = useMessages(currentChat?.chat_id ?? 'general')
+  const listRef = useRef(null)
+  const { stayScrolled } = useStayScrolled(listRef)
+
+  useEffect(() => {
+    stayScrolled()
+  }, [messages.length])
+
   return (
-    <ul className='flex flex-col pb-4'>
-      {messages?.map((message, i) => {
-        const date = message.createdAt ? new Date(message.createdAt).toLocaleString() : ''
-        return (
-          <li key={i} className='mx-5 flex gap-4 py-2'>
-            <Image
-              src={getAvatarById(message.user.id)} alt=''
-              height={20} width={20}
-              className='h-10 w-10 rounded-full'
-            />
-            <div className='w-full'>
-              <p className='whitespace-nowrap font-medium'>{message.user?.username} <span className='text-sm font-thin'>{date}</span></p>
-              <p className='break-all text-base'>
-                {message.text}
-              </p>
-            </div>
-          </li>
-        )
-      })}
-    </ul>
+    <div className='absolute inset-0 overflow-y-auto' ref={listRef}>
+      <ul className='flex min-h-full flex-col justify-end pb-4'>
+        {isMoreMessages && <button onClick={getMoreMessages}>get moar</button>}
+        {messages?.map((message, i) => {
+          const date = message.createdAt ? new Date(message.createdAt).toLocaleString() : ''
+          return (
+            <li key={i} className='mx-5 flex gap-4 py-2'>
+              <Image
+                src={getAvatarById(message.user.id)} alt=''
+                height={20} width={20}
+                className='h-10 w-10 rounded-full'
+              />
+              <div className='w-full'>
+                <p className='whitespace-nowrap font-medium'>{message.user?.username} <span className='text-sm font-thin'>{date}</span></p>
+                <p className='break-all text-base'>
+                  {message.text}
+                </p>
+              </div>
+            </li>
+          )
+        })}
+        <div id='scrollBottom' />
+      </ul>
+    </div>
   )
 }
 
@@ -54,13 +68,13 @@ const Input = () => {
 
   async function handleFormSubmit (data: FormData) {
     reset()
+    document.getElementById('scrollBottom')?.scrollIntoView()
     let newId = ''
     if (currentChat?.chat_id === 'none') {
       const { data }: { data: { id: string } } = await axios.post('/api/post/chat')
       removeClientChat(router.query.chatId as string)
       newId = data.id
     }
-
     const chatId = newId || (currentChat?.chat_id ?? 'general')
 
     try {
@@ -134,9 +148,7 @@ const Chat = ({ session }: { session: Session }) => {
   return (
     <ChatPageLayout session={session}>
       <div className='relative -mb-3 basis-full'>
-        <div className='absolute inset-0 overflow-y-scroll'>
-          <Messages />
-        </div>
+        <Messages />
       </div>
       <Input />
     </ChatPageLayout>
