@@ -1,5 +1,5 @@
 export type User = {
-  lastActive?: string
+  lastActive?: number
   id: string
   username: string
 }
@@ -11,10 +11,9 @@ export type Message = {
 }
 
 export type Chat = {
-  id: string
-  lastActive?: number
-  users: User[]
-  messages: Message[]
+  chat_id: string
+  name: string
+  lastActive: number
 }
 
 export type ChatsMap = { [key: Chat['id']]: Chat }
