@@ -11,12 +11,13 @@ export const useMessages = (chatId: string): Message[] => {
   const db = getDb()
 
   useEffect(() => {
-    if (!chatId) return
+    if (!chatId || chatId === 'none') return setMessages([])
     const q = query(
       collection(db, `chats/${chatId}/messages`),
       orderBy('createdAt'),
       limit(50)
     )
+
     const unsubscribe = onSnapshot(q, (QuerySnapshot) => {
       const messages: any[] = []
       QuerySnapshot.forEach((doc: { data: () => any, id: any }) => {
