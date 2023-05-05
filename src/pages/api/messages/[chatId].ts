@@ -8,7 +8,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   limit = limit !== undefined ? +limit : 20
   offset = offset !== undefined ? +offset : 0
 
-  console.log(offset)
   const messages: Message[] = []
   try {
     const messagesRef = firestore

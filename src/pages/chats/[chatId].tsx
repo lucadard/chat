@@ -32,7 +32,7 @@ const Messages = () => {
   return (
     <div className='absolute inset-0 overflow-y-auto' ref={listRef}>
       <ul className='flex min-h-full flex-col justify-end pb-4'>
-        {isMoreMessages && <button onClick={getMoreMessages}>get moar</button>}
+        {isMoreMessages && messages.length > 0 && <button onClick={getMoreMessages}>get moar</button>}
         {messages?.map((message, i) => {
           const date = message.createdAt ? new Date(message.createdAt).toLocaleString() : ''
           return (
