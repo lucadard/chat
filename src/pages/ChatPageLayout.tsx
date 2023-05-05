@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-indent */
 import Sidebar from '@/components/Sidebar'
 import { ChatProvider, useChat } from '@/context/ChatContext'
 import { getAvatarById } from '@/lib'
@@ -5,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useLastActive } from '@/hooks/useUserLastActive'
+import { useUserLastActive } from '@/hooks/useUserLastActive'
 import { Session } from 'next-auth'
 
 type Props = {
@@ -17,19 +18,21 @@ const Upper = ({ section, setSection }: {
   section: 'chat' | 'info'
   setSection: React.Dispatch<React.SetStateAction<'chat' | 'info'>>
 }) => {
-  const { currentChatData } = useChat()
-  const isGeneral = !currentChatData?.id
-  const lastActive = useLastActive(currentChatData?.user?.username)
+  const { currentChat } = useChat()
+
+  const isGeneral = !currentChat
+  const lastActive = useUserLastActive(currentChat?.name)
+
   return (
     <div className='flex flex-col justify-end border-b border-secondary bg-nav p-5 pb-0'>
       <div className={`h-10 cursor-default pb-3 text-xl text-links ${lastActive === 'never' ? 'opacity-50' : ''}`}>
         <span>chats</span>
         <span className='mx-1 text-gray-400'>/</span>
-        <span className='font-semibold'>{currentChatData?.name}</span>
-        {lastActive &&
-          <span className='ml-2 text-sm text-gray-300'>
-            last active: {lastActive}
-          </span>}
+        <span className='font-semibold'>{currentChat?.name ?? 'general'}</span>
+          {lastActive !== undefined &&
+            <span className='ml-2 text-sm text-gray-300'>
+            {lastActive !== 'loading' ? `last active: ${lastActive}` : 'loading'}
+            </span>}
       </div>
       <div
         className='flex gap-2'
@@ -56,17 +59,17 @@ const Upper = ({ section, setSection }: {
 
 const UserData = () => {
   const [userInfo, setUserInfo] = useState<any>(undefined)
-  const { currentChatData } = useChat()
+  const { currentChat } = useChat()
 
   useEffect(() => {
-    if (!currentChatData?.user) return
+    if (!currentChat?.name) return
 
     async function getCurrentUserData (username: string) {
       const res = await fetch(`/api/github/user/${username}`)
       return (await res.json()).data
     }
-    getCurrentUserData(currentChatData.user?.username).then(setUserInfo).catch(console.error)
-  }, [currentChatData.user])
+    getCurrentUserData(currentChat.name).then(setUserInfo).catch(console.error)
+  }, [currentChat])
 
   if (!userInfo) return null
 

@@ -1,18 +1,21 @@
 /* eslint-disable react/jsx-closing-tag-location */
-import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
-import { z } from 'zod'
-import ChatPageLayout from '../ChatPageLayout'
-import { getSession, useSession } from 'next-auth/react'
-import { getAvatarById } from '@/lib'
+import React from 'react'
 import Image from 'next/image'
 import { type GetServerSideProps } from 'next'
-import { ChatProvider, useChat } from '@/context/ChatContext'
-import { useMessages } from '@/hooks/useMessages'
 import { Session } from 'next-auth'
+import { getSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
+
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
 import axios from 'axios'
 import { firestore } from '@/firebase/admin'
+
+import { getAvatarById } from '@/lib'
+import { useChat } from '@/context/ChatContext'
+import ChatPageLayout from '../ChatPageLayout'
 
 const Messages = () => {
   const { messages } = useChat()
@@ -42,35 +45,33 @@ const Messages = () => {
 
 type FormData = { message: string }
 const Input = () => {
-  const { currentChatData, removeNewChat, session } = useChat()
+  const { currentChat, session, removeClientChat } = useChat()
+  const router = useRouter()
   const { register, reset, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(z.object({ message: z.string().trim().min(1).max(300) })),
     defaultValues: { message: '' }
   })
 
   async function handleFormSubmit (data: FormData) {
-    let newChatId = ''
-    if (currentChatData?.id === 'new') {
-      try {
-        const res = await axios.post<{ id: string }>('/api/post/chat', {
-          users: [{
-            id: session?.user.id,
-            username: session?.user.name
-          }, {
-            id: currentChatData.user?.id,
-            username: currentChatData.user?.username
-          }]
-        })
-        newChatId = res.data.id
-        removeNewChat()
-      } catch (err) { console.error('Could not create new chat...') }
-    }
     reset()
+    let newId = ''
+    if (currentChat?.chat_id === 'none') {
+      const { data }: { data: { id: string } } = await axios.post('/api/post/chat')
+      removeClientChat(router.query.chatId as string)
+      newId = data.id
+    }
+
+    const chatId = newId || (currentChat?.chat_id ?? 'general')
+
     try {
       await axios.post('/api/post/message', {
-        chatId: newChatId || (currentChatData?.id ?? 'general'),
+        chatId,
         message: data.message,
-        user: {
+        receiver: {
+          id: router.query.chatId as string,
+          username: currentChat?.name
+        },
+        sender: {
           id: session?.user.id,
           username: session?.user?.name
         }
@@ -116,7 +117,7 @@ export const getServerSideProps: GetServerSideProps | {} = async (ctx) => {
     .get()
   docs.forEach(doc => { if (doc.data().id === chatId) { userHasPermission = true } })
 
-  if (!userHasPermission && permittedRoutes?.includes(chatId)) {
+  if (!userHasPermission && !permittedRoutes?.includes(chatId)) {
     return {
       redirect: { destination: '/chats/general' }
     }
