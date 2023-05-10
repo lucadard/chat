@@ -9,6 +9,7 @@ import { useRouter } from 'next/router'
 import { useUserLastActive } from '@/hooks/useUserLastActive'
 import { Session } from 'next-auth'
 import axios from 'axios'
+import { Button } from './components/Button'
 
 type Props = {
   session: Session
@@ -62,17 +63,13 @@ const Upper = ({ section, setSection }: {
             className={`flex cursor-pointer items-center gap-2 border-orange-600 p-2 pb-3 ${section === 'info' ? 'border-b' : ''}`}
             onClick={() => !isGeneral && setSection('info')}
           >
-            <span>◴</span>
             <p>User</p>
           </div>}
           <div className='ml-auto grid place-content-center'>
           {currentChat &&
-          <button
-            onClick={handleRemoveChat}
-            className=' grid h-8 cursor-pointer place-content-center items-center rounded-md border border-secondary-text/30 bg-sidebar p-2 px-4 pb-3 text-sm font-semibold text-red-500 duration-100 hover:border-red-400 hover:bg-red-500 hover:text-white'
-          >
-            <p className='-mb-1 h-min'>Remove</p>
-          </button>}
+          <Button type='remove'>
+            Remove
+          </Button>}
           </div>
       </div>
     </div>
