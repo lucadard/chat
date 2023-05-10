@@ -17,3 +17,5 @@ export const Button = ({ children, action, type }: { children: React.ReactNode, 
     </button>
   )
 }
+
+export default Button
