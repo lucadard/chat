@@ -1,8 +1,6 @@
 
 import { firestore } from '@/firebase/admin'
 import { User } from '@/types/types'
-import { runTransaction } from '@firebase/firestore'
-import { FieldValue } from 'firebase-admin/firestore'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 // eslint-disable-next-line import/no-anonymous-default-export

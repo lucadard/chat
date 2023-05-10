@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-closing-tag-location */
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { type GetServerSideProps } from 'next'
 import { Session } from 'next-auth'

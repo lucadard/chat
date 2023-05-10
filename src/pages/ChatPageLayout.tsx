@@ -67,7 +67,7 @@ const Upper = ({ section, setSection }: {
           </div>}
           <div className='ml-auto grid place-content-center'>
           {currentChat &&
-          <Button type='remove'>
+          <Button type='remove' action={handleRemoveChat}>
             Remove
           </Button>}
           </div>
