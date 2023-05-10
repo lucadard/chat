@@ -16,6 +16,23 @@ module.exports = {
         'secondary-border': '#363B42',
         'secondary-text': '#7D8590'
       }
+    },
+    animation: { hi: 'hi 500ms ease-in-out' },
+    keyframes: {
+      hi: {
+        '20%': {
+          transform: 'rotate(25deg)'
+        },
+        '70%': {
+          transform: 'rotate(-10deg)'
+        },
+        '90%': {
+          transform: 'rotate(5deg)'
+        },
+        '100%': {
+          transform: 'rotate(0deg)'
+        }
+      }
     }
   },
   plugins: []
