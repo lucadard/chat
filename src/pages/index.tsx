@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-closing-tag-location */
 import { Session } from 'next-auth'
-import { getSession } from 'next-auth/react'
+import { getSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { GetServerSideProps } from 'next/types'
@@ -62,7 +62,13 @@ export default function Home ({ session }: { session: Session }) {
         </ul>
         <div className='place-self-end self-center'>
           {session?.user
-            ? <Link href='/chats/general'><Button type='default'>open app</Button></Link>
+            ? <Link
+                href='/api/auth/signout'
+                onClick={(e) => {
+                  e.preventDefault()
+                  void signOut({ callbackUrl: '/' })
+                }}
+              ><Button type='default'>logout</Button></Link>
             : <Link href='/signin'><Button type='default'>login</Button></Link>}
         </div>
       </nav>
